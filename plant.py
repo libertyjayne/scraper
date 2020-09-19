@@ -1,15 +1,23 @@
 import requests
+import logging
 from bs4 import BeautifulSoup
 from csv import writer
 # Mock data
 from plant_html import html_doc
+from html_doc1 import html_doc1
 
 class Plant:
-  def __init__(self):
-  # response = requests.get(link)
-    self.soup = BeautifulSoup(html_doc, 'html.parser')
+  # def __init__(self):
+  def __init__(self, link):
+    logging.debug('Plant Instance')
+    response = requests.get(link)
+    self.soup = BeautifulSoup(response.text, 'html.parser')
+    # self.soup = BeautifulSoup(html_doc1, 'html.parser')
     self.data = self.set_data()
     self.headers = self.set_headers()
+
+    debug_message = 'Data : {0}'
+    logging.debug(debug_message.format(self.data))
 
   def set_headers(self):
     headers = []
@@ -26,18 +34,23 @@ class Plant:
     data['Zone'] = self.soup.find(class_='zone-data').find('a').get_text().strip()
 
     # Adding inconsistent keys
-    data['Growth habit:'] = None
     data['Patent Act:'] = None
+    data['Growth habit:'] = None
     data['Companion Plants'] = None
     data['Garden style'] = None
     data['Sunset climate zones:'] = None
     data['Foliage color:'] = None
     data['Flower attributes'] = None
-
+    data['Flower color:'] = None
+    
     # Remaining details
     data['Companion Plants'] = self.soup.find(class_='attribute details clear paragraph').find(class_='left').get_text().strip()
-    data['Care'] = self.soup.find(id='Care').find(class_='attribute care paragraph').contents[2].strip()
-
+    care = self.soup.find(id='Care').find(class_='attribute care paragraph').contents
+    logging.debug('Care Contents Length')
+    logging.debug(len(care))
+    logging.debug('Care Contents')
+    logging.debug(care)
+    data['Care'] = self.soup.find(id='Care').find(class_='attribute care paragraph').contents[len(care) - 1].strip()
 
     attr_d_c = self.soup.find_all(class_='attribute details clear')
     for i in range(0,len(attr_d_c)):
